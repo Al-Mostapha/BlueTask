@@ -12,8 +12,14 @@ class CartItems extends Model
     protected $table ="shop_cart_items";
     protected $fillable = ["chart_id", "product_id", "product_count"];
 
-    public function cart(Type $var = null)
+    public function cart()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Cart::class);
     }
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
+
 }

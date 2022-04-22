@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Cart;
 use App\Models\CartItems;
+use Illuminate\Support\Facades\DB;
+
 class CartController extends Controller
 {
     /**
@@ -12,9 +14,21 @@ class CartController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+    
+    public function getView()
+    {
+        return view("cart");
+    }
+
     public function index()
     {
-        return response()->json(\Auth::user()->cart->items);
+        $CartItems = DB::table('shop_charts')
+                ->join('shop_cart_items', 'shop_charts.id', '=', 'shop_cart_items.chart_id')
+                ->join('products', 'shop_cart_items.product_id', '=', 'products.id')
+                ->select(DB::raw("`products`.*, `shop_cart_items`.id as item_id"))
+                ->where("shop_charts.user_id", \Auth::user()->id)
+                ->get();
+        return response()->json($CartItems);
     }
 
     /**
@@ -92,6 +106,16 @@ class CartController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $CartItem = CartItems::find($id);
+
+        if(!$CartItem)
+            return response()->json([
+                "status" => "error"
+            ]);
+
+        $CartItem->delete();
+        return response()->json([
+            "status" => "ok"
+        ]);
     }
 }
