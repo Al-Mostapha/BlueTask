@@ -90,6 +90,7 @@ build_script:
         $env:OPENPACE_DEF="/DENABLE_OPENPACE"
         $env:OPENPACE_DIR="C:\openpace-${env:OPENSSL_PF}"
       }
+  - bash -c "exec 0</dev/null && chmod +x ./bootstrap"
   - bash -c "exec 0</dev/null && chmod +x ./bootstrap.ci"
   - bash -c "exec 0</dev/null && if [ \"$APPVEYOR_REPO_BRANCH\" == \"master\" -a -z \"$APPVEYOR_PULL_REQUEST_NUMBER\" ]; then ./bootstrap; fi"
   - bash -c "exec 0</dev/null && if [ \"$APPVEYOR_REPO_BRANCH\" == \"master\" -a -n \"$APPVEYOR_PULL_REQUEST_NUMBER\" ]; then ./bootstrap.ci -s \"-pr$APPVEYOR_PULL_REQUEST_NUMBER\"; fi"
