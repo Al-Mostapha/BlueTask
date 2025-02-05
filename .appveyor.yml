@@ -32,13 +32,14 @@ environment:
 init:
   # Fixes "fatal: detected dubious ownership in repository at '/cygdrive/c/projects/opensc'" with recent images
   - git config --global --add safe.directory /cygdrive/c/projects/opensc
+  - git config --global --add safe.directory /cygdrive/c/projects/bluetask
 
 install:
   - ps: if ($env:APPVEYOR_PULL_REQUEST_NUMBER -and $env:APPVEYOR_BUILD_NUMBER -ne ((Invoke-RestMethod `
         https://ci.appveyor.com/api/projects/$env:APPVEYOR_ACCOUNT_NAME/$env:APPVEYOR_PROJECT_SLUG/history?recordsNumber=50).builds | `
         Where-Object pullRequestId -eq $env:APPVEYOR_PULL_REQUEST_NUMBER)[0].buildNumber) { `
         throw "There are newer queued builds for this pull request, failing early." }
-  - ps: $env:PACKAGE_NAME=(git describe --tags --abbrev=0)
+  - ps: $env:PACKAGE_NAME="opensc"
   - ps: $env:OPENSSL_PF = If ($env:Platform -eq "x86") { "Win32" } Else { "Win64" }
   - ps: $env:ARTIFACT="OpenSC-${env:PACKAGE_NAME}_${env:OPENSSL_PF}"
   - ps: >-
@@ -90,6 +91,8 @@ build_script:
         $env:OPENPACE_DEF="/DENABLE_OPENPACE"
         $env:OPENPACE_DIR="C:\openpace-${env:OPENSSL_PF}"
       }
+  - bash -c "exec 0</dev/null && chmod +x ./bootstrap"
+  - bash -c "exec 0</dev/null && chmod +x ./bootstrap.ci"
   - bash -c "exec 0</dev/null && if [ \"$APPVEYOR_REPO_BRANCH\" == \"master\" -a -z \"$APPVEYOR_PULL_REQUEST_NUMBER\" ]; then ./bootstrap; fi"
   - bash -c "exec 0</dev/null && if [ \"$APPVEYOR_REPO_BRANCH\" == \"master\" -a -n \"$APPVEYOR_PULL_REQUEST_NUMBER\" ]; then ./bootstrap.ci -s \"-pr$APPVEYOR_PULL_REQUEST_NUMBER\"; fi"
   - bash -c "exec 0</dev/null && if [ \"$APPVEYOR_REPO_BRANCH\" != \"master\" -a -z \"$APPVEYOR_PULL_REQUEST_NUMBER\" ]; then ./bootstrap.ci -s \"-$APPVEYOR_REPO_BRANCH\"; fi"
@@ -111,11 +114,11 @@ build_script:
   - bash -c "git config --global user.name 'AppVeyor'"
   - bash -c "if [ \"$DO_PUSH_ARTIFACT\" = yes -a -z \"$APPVEYOR_PULL_REQUEST_NUMBER\" -a \"$APPVEYOR_REPO_NAME\" = \"OpenSC/OpenSC\" ]; then .github/push_artifacts.sh \"AppVeyor build ${APPVEYOR_BUILD_NUMBER}.${APPVEYOR_JOB_NUMBER}\"; fi"
 
-deploy:
-- provider: Webhook
-  url: https://app.signpath.io/API/v1/8d2463fe-39bd-4a41-bb72-f008b4b1fe17/Integrations/AppVeyor?ProjectSlug=OpenSC&SigningPolicySlug=release-signing&ArtifactConfigurationSlug=initial
-  authorization:
-     secure: 73Qvk9MbD7M7ZcoO6NnSH7zDA+9wSKZqNc602b1UeA5v6GsDyEvpCOlzJ9VvBcUuePTKBRsZ+uGQYKsddABgQA==
+# deploy:
+# - provider: Webhook
+#   url: https://app.signpath.io/API/v1/8d2463fe-39bd-4a41-bb72-f008b4b1fe17/Integrations/AppVeyor?ProjectSlug=OpenSC&SigningPolicySlug=release-signing&ArtifactConfigurationSlug=initial
+#   authorization:
+#      secure: 73Qvk9MbD7M7ZcoO6NnSH7zDA+9wSKZqNc602b1UeA5v6GsDyEvpCOlzJ9VvBcUuePTKBRsZ+uGQYKsddABgQA==
 
 cache:
   - C:\zlib -> .appveyor.yml
